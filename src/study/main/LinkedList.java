@@ -7,12 +7,10 @@ public class LinkedList<E> {
     public static class Node<E> {
         E item;
         Node<E> next;
-        Node<E> prev;
 
-        Node(Node<E> prev, E item, Node<E> next) {
+        Node(E item) {
             this.item = item;
-            this.next = next;
-            this.prev = prev;
+            this.next = null;
 
         }
     }
@@ -25,104 +23,111 @@ public class LinkedList<E> {
     }
 
     public void addFirst(E e){
-        Node<E> f = first;
-        Node<E> newNode = new Node<>(null, e, f);
+        Node<E> newNode = new Node<>(e);
+        newNode.next = first;
         first = newNode;
-        if (f == null) {
-            last = newNode;
-        }
-        else{
-            f.prev = newNode;
+
+        if(first.next == null){
+            last = first;
         }
         size++;
     }
     public void addLast(E e){
-        Node<E> l = last;
-        Node<E> newNode = new Node<>(last, e, null);
+        Node<E> newNode = new Node<>(e);
+        if(size == 0){
+            addFirst(e);
+            return;
+        }
+        last.next = newNode;
         last = newNode;
-        if(l == null){
-            first = newNode;
-        }
-        else{
-            l.next = newNode;
-        }
         size++;
+
     }
 
     //특정 위치에 추가
     public void add(int index, E e){
-        if (index == size){
+        if (index > size || index < 0){
+            throw new IndexOutOfBoundsException();
+        }
+        if(index == 0){
+            addFirst(e);
+            return;
+        }
+        if(index == size){
             addLast(e);
+            return;
         }
-        else{
-            Node<E> succ = node(index);
-            Node<E> pred = succ.prev;
-            Node<E> newNode = new Node<>(pred, e, succ);
-            succ.prev = newNode;
-            if (pred == null) {
-                first = newNode;
-            }else{
-                pred.next = newNode;
-            }
-            size++;
-        }
+        Node<E> prevNode = node(index-1);
+
+        Node<E> nextNode = prevNode.next;
+
+        Node<E> newNode = new Node<E>(e);
+        prevNode.next = null;
+        prevNode.next = newNode;
+        newNode.next = nextNode;
+        size++;
     }
 
-    public E unlink(Node<E> x){
-        E element = x.item;
-        Node<E> next = x.next;
-        Node<E> prev = x.prev;
-        //x의 앞 노드 재설정 후 x의 전 노드 초기화
-        if(prev == null){
-            first = next;
-        }else{
-            prev.next = next;
-            x.prev = null;
+    public boolean unlink(Object value){
+        Node<E> prevNode = first;
+        boolean hasValue = false;
+        Node<E> x = first;
+
+        for(; x!= null;x = x.next){
+            if(value.equals(x.item)){
+                hasValue = true;
+                break;
+            }
+            prevNode = x;
         }
-        //x뒤 노드 재설정 후 x의 다음노드 초기화
-        if(next == null){
-            last = prev;
+
+        if( x == null){
+            return false;
+        }
+        if(x.equals(first)){
+            remove();
+            return true;
         }
         else{
-            next.prev = prev;
+            prevNode.next = x.next;
+            if(prevNode.next == null){
+                first = prevNode;
+            }
+            x.item = null;
             x.next = null;
+            size--;
+            return true;
         }
-        x.item = null;
-        size--;
-        return element;
     }
     public Node<E> node(int index){
-        Node<E> x;
-        if (index < (size >> 1)){
-            x = first;
-            for (int i = 0; i < index; i++) {
-                x = x.next;
-            }
-        } else{
-            x = last;
-            for (int i = size - 1; i> index;i--){
-                x = x.prev;
-            }
+        if(index>=size || index<0){
+            throw new IndexOutOfBoundsException();
+        }
+
+        Node<E> x = first;
+        for(int i = 0; i< index;i++){
+            x = x.next;
         }
         return x;
     }
-    public E removeFirst(){
-        if (first == null) throw new NoSuchElementException();
-        return unlink(first);
-    }
-    public E removeLast(){
-        if (last==null) throw new NoSuchElementException();
-        return unlink(last);
-    }
 
-    public boolean contains(E e){
-        for (Node<E> x = first; x != null ;x = x.next){
-            if(e.equals(x.item)){
-                return true;
-            }
-
+    public E remove(){
+        Node<E> firstNode = first;
+        if(firstNode == null) {
+            throw new NoSuchElementException();
         }
-        return false;
+
+
+        E element = firstNode.item;
+        Node<E> nextNode = first.next;
+        first.item = null;
+        first.next = null;
+        first = nextNode;
+        size--;
+        if(size == 0){
+            last = null;
+        }
+        return element;
 
     }
     public int size(){
